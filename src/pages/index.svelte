@@ -6,7 +6,8 @@
 	const SHOP = Symbol('shop');
 
 	let state = IDLE;
-	let diceResult;
+	let hp = 20;
+	let gp = 0;
 	let log = [];
 
 	function shop () {
@@ -29,14 +30,39 @@
 
 	function explore () {
 		state = EXPLORE;
-		const dice = roll();
-		const encounter = location.encounters[dice - 1];
-		const logEvent = {
+		const result = roll();
+		const encounter = location.encounters[result - 1];
+		const event = {
+			createdAt: new Date(),
+			encounter,
+			gp,
+			hp,
+			result,
+			type: 'encounter',
+			location
+		};
+		log = [...log, event];
+	}
+
+	function fight () {
+		state = IDLE;
+		const lastEvent = log.at(-1);
+		const result = roll();
+		const { encounter } = lastEvent;
+		const win = encounter.defense !== null && result > encounter.defense;
+		const event = {
+			createdAt: new Date(),
+			encounter,
+			gp: gp + (win ? encounter.gold : 0),
+			hp: hp - (win ? 0 : encounter.damage),
+			result,
 			type: 'fight',
 			location,
-			encounter
+			win
 		};
-		log.push(logEvent);
+		hp = event.hp;
+		gp = event.gp;
+		log = [...log, event];
 	}
 
 	function flee () {
@@ -54,9 +80,8 @@
 
 <Layout>
 	<h1>Korg</h1>
-	<div>20 HP</div>
-	<div>0 GP</div>
-	<div>Dice: {diceResult}</div>
+	<div>{hp} HP</div>
+	<div>{gp} GP</div>
 	<div>
 		{#if state === IDLE}
 			<h2>Play</h2>
@@ -65,6 +90,7 @@
 		{/if}
 		{#if state === EXPLORE}
 			<h2>Explore</h2>
+			<button on:click={fight}>Fight</button>
 			<button on:click={flee}>Flee</button>
 		{/if}
 		{#if state === SHOP}
@@ -79,6 +105,8 @@
 				<div>{event.type}</div>
 				<div>{event.location.label}</div>
 				<div>{event.encounter.label}</div>
+				<div>{event.hp} HP</div>
+				<div>{event.gp} GP</div>
 			</li>
 		{/each}
 	</ol>
