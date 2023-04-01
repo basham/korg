@@ -2,32 +2,15 @@
 	import { onMount } from 'svelte';
 	import Layout from './layout.svelte';
 
-	const IDLE = Symbol('idle');
-	const EXPLORE = Symbol('explore');
-	const SHOP = Symbol('shop');
-
 	const NEW_GAME = Symbol('new game');
-	const ENCOUNTER = Symbol('encounter');
-	const FIGHT = Symbol('fight');
+	const ENCOUNTER_FOE = Symbol('encounter foe');
+	const ENCOUNTER_TRAP = Symbol('encounter trap');
+	const DEFEAT_FOE = Symbol('defeat foe');
+	const TAKE_DAMAGE_FROM_FOE = Symbol('take damage from foe');
+	const TAKE_DAMAGE_FROM_TRAP = Symbol('take damage from trap');
 
-	let log = [];
-	$: event = log.at(-1) || {};
-
-	onMount(() => {
-		newGame();
-	});
-
-	function newGame () {
-		log = [];
-		pushEvent(NEW_GAME, {
-			gold: 0,
-			health: 20
-		});
-	}
-
-	function shop () {
-		state = SHOP;
-	}
+	const GOLD = 0;
+	const HEALTH = 20;
 
 	const location = {
 		label: 'Ruin',
@@ -43,43 +26,58 @@
 		)
 	}
 
-	function explore () {
-		const result = roll();
-		const encounter = location.encounters[result - 1];
-		pushEvent(ENCOUNTER, {
-			encounter,
-			result,
+	let log = [];
+	$: event = log.at(-1) || {};
+
+	onMount(() => {
+		newGame();
+	});
+
+	function newGame () {
+		log = [];
+		pushEvent(NEW_GAME, {
+			gold: GOLD,
+			health: HEALTH,
 			location
 		});
 	}
 
-	function fight () {
+	function explore () {
 		const result = roll();
-		const { encounter } = event;
-		const win = encounter.defense !== null && result > encounter.defense;
-		const goldDiff = win ? encounter.gold : 0;
-		const healthDiff = win ? 0 : encounter.damage;
-		pushEvent(FIGHT, {
+		const encounter = location.encounters[result - 1];
+		const type = encounter.trap ? ENCOUNTER_TRAP : ENCOUNTER_FOE;
+		pushEvent(type, {
 			encounter,
-			gold: event.gold + goldDiff,
-			goldDiff,
-			health: event.health - healthDiff,
-			healthDiff,
-			result,
-			win
+			result
 		});
 	}
 
-	function flee () {
-		state = IDLE;
+	function encounterTrap () {
+		const { damage } = event.encounter;
+		pushEvent(TAKE_DAMAGE_FROM_TRAP, {
+			health: event.health - damage,
+			result: null
+		});
 	}
 
-	function leave () {
-		state = IDLE;
+	function encounterFoe () {
+		const result = roll();
+		const { damage, defense, gold } = event.encounter;
+		if (result > defense) {
+			pushEvent(DEFEAT_FOE, {
+				gold: event.gold + gold,
+				result
+			});
+		} else {
+			pushEvent(TAKE_DAMAGE_FROM_FOE, {
+				health: event.health - damage,
+				result
+			});
+		}
 	}
 
-	function roll () {
-		return Math.ceil(Math.random() * 6);
+	function roll (max = 6) {
+		return Math.ceil(Math.random() * max);
 	}
 
 	function pushEvent (type, details) {
@@ -90,39 +88,74 @@
 			...details
 		};
 		log = [...log, nextEvent];
+		document.getElementById('current-event').focus();
 	}
 
 	function getArticle (noun) {
 		const firstLetter = noun.toLowerCase()[0];
 		return 'aeiou'.includes(firstLetter) ? 'an' : 'a';
 	}
+
+	function defeatedFoes (log) {
+		const foes = log
+			.filter(({ type }) => type === DEFEAT_FOE)
+			.reduce((map, { encounter }) => {
+				const { label } = encounter;
+				if (!map.has(label)) {
+					map.set(label, 0);
+				}
+				map.set(label, map.get(label) + 1);
+				return map;
+			}, new Map());
+		if (!foes.size) {
+			return '(none)';
+		}
+		return [...foes.entries()]
+			.map(([label, count]) => `${label} (${count})`)
+			.join(', ');
+	}
 </script>
 
 <Layout>
 	<h1>Korg</h1>
 	<p class="status">{event.health} health<br>{event.gold} gold</p>
-	<article aria-label="Current event" class="event" tabindex="-1">
-		{#if event.type === ENCOUNTER}
-			<p>You encounter {getArticle(event.encounter.label)} <strong>{event.encounter.label}</strong>.</p>
-			{#if event.encounter.trap}
-				<p>The trap cannot be avoided.<br>Take <strong>{event.encounter.damage} damage</strong>.</p>
-				<p><button on:click={fight}>Continue</button></p>
-			{:else}
-				<p>You cannot flee.</p>
-				<p><strong>Roll {event.encounter.defense + 1}{event.encounter.defense + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.encounter.gold} gold</strong>.<br>Otherwise, take <strong>{event.encounter.damage} damage</strong>.</p>
-				<p><button on:click={fight}>Fight</button></p>
-			{/if}
+	<p>Defeated foes: {defeatedFoes(log)}</p>
+	<article aria-label="Current event" class="event" id="current-event" tabindex="-1">
+		{#if event.type === NEW_GAME}
+			<p>You are an adventurer.</p>
+			<p><button on:click={explore}>Explore</button></p>
 		{/if}
-		{#if event.type === FIGHT && event.win}
+		{#if event.type === ENCOUNTER_FOE}
+			<p>You encounter {getArticle(event.encounter.label)} <strong>{event.encounter.label}</strong>.</p>
+			<p><strong>Roll {event.encounter.defense + 1}{event.encounter.defense + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.encounter.gold} gold</strong>.<br>Otherwise, take <strong>{event.encounter.damage} damage</strong>.</p>
+			<p><button on:click={encounterFoe}>Fight</button></p>
+		{/if}
+		{#if event.type === ENCOUNTER_TRAP}
+			<p>You encounter {getArticle(event.encounter.label)} <strong>{event.encounter.label}</strong>.</p>
+			<p><button on:click={encounterTrap}>Continue</button></p>
+		{/if}
+		{#if event.type === DEFEAT_FOE}
 			<p>You <strong>rolled {event.result}</strong> and defeat the <strong>{event.encounter.label}</strong>.</p>
 			<p>Gain <strong>{event.encounter.gold} gold</strong>.</p>
-		{/if}
-		{#if event.type === FIGHT && !event.win}
-			<p>You <strong>rolled {event.result}</strong> and lose against the <strong>{event.encounter.label}</strong>.</p>
-			<p>Take <strong>{event.encounter.damage} damage</strong>.</p>
-		{/if}
-		{#if event.type === NEW_GAME || event.type === FIGHT}
 			<p><button on:click={explore}>Explore</button></p>
+		{/if}
+		{#if event.type === TAKE_DAMAGE_FROM_FOE}
+			<p>You <strong>rolled {event.result}</strong> and take <strong>{event.encounter.damage} damage</strong> from the <strong>{event.encounter.label}</strong>.</p>
+			{#if event.health <= 0}
+				<p>You die.</p>
+				<p><button on:click={newGame}>New game</button></p>
+			{:else}
+				<p><button on:click={explore}>Explore</button></p>
+			{/if}
+		{/if}
+		{#if event.type === TAKE_DAMAGE_FROM_TRAP}
+			<p>Take <strong>{event.encounter.damage} damage</strong> from the <strong>{event.encounter.label}</strong>.</p>
+			{#if event.health <= 0}
+				<p>You die.</p>
+				<p><button on:click={newGame}>New game</button></p>
+			{:else}
+				<p><button on:click={explore}>Explore</button></p>
+			{/if}
 		{/if}
 	</article>
 </Layout>
