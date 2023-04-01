@@ -20,15 +20,15 @@ export function pushEvent(type, details = {}) {
 		takeDamage = 0,
 	} = details;
 	const nextEvent = {
+		type,
 		...details,
 		createdAt: new Date(),
-		get location() {
-			return locations.find(({ id }) => id === location);
-		},
 		gold: gold + gainGold,
 		health: health - takeDamage + heal,
 		items: changeItems(items),
-		type
+		get location() {
+			return locations.find(({ id }) => id === location);
+		}
 	};
 	log.update((l) => [...l, nextEvent]);
 }

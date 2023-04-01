@@ -3,7 +3,7 @@
 	import { currentEvent } from '@src/log.js';
 </script>
 
-<p>Take <strong>{$currentEvent.takeDamage} damage</strong> from the <strong>{$currentEvent.trap.label}</strong>.</p>
+<p>Take <strong>{$currentEvent.takeDamage} damage</strong> from the <strong>{$currentEvent.trap?.label}</strong>.</p>
 {#if $currentEvent.gainGold}
 	<p>You discover <strong>{$currentEvent.gainGold} gold</strong>.</p>
 {/if}

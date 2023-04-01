@@ -99,7 +99,6 @@
 
 	currentEvent.subscribe((e) => {
 		event = e;
-		console.log('E', e)
 		document.getElementById('current-event')?.focus();
 	});
 
