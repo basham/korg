@@ -17,7 +17,7 @@
 	const ruinLocation = {
 		label: 'Ruins',
 		encounters: [
-			['Pit trap', null, 3, 0],
+			['Pit trap', 0, 3, 0],
 			['Skeleton', 2, 2, 1],
 			['Goblin', 3, 2, 2],
 			['Wraith', 5, 2, 4],
@@ -29,7 +29,7 @@
 	const catacombsLocation = {
 		label: 'Catacombs',
 		encounters: [
-			['Spike trap', null, 4, 'd6'],
+			['Spike trap', 0, 4, 'd6'],
 			['Zombie', 2, 2, 1],
 			['Ghoul', 2, 3, 2],
 			['Ghost', 4, 2, 4],
@@ -38,13 +38,39 @@
 		]
 	};
 
+	const fetidSwampLocation = {
+		label: 'Fetid Swamp',
+		encounters: [
+			['Acid trap', 0, 0, -4],
+			['Croaker', 1, 3, 0],
+			['Snakefolk', 3, 3, 4],
+			['Slime', 4, 0, 'd6'],
+			['Shaman', 4, 3, 6],
+			['Basilisk', 3, 8, 12]
+		]
+	};
+
+	const darkTowerLocation = {
+		label: 'Dark Tower',
+		encounters: [
+			['Crow', 2, 1, 0],
+			['Guard', 3, 2, 1],
+			['Gargoyle', 4, 2, 3],
+			['Werewolf', 3, 4, 5],
+			['Pendulumn trap', 0, 'd6', 0],
+			['Vampire', 5, 5, 11]
+		]
+	};
+
 	const locations = [
 		ruinLocation,
-		catacombsLocation
+		catacombsLocation,
+		fetidSwampLocation,
+		darkTowerLocation
 	].map((location) => {
 		const id = Symbol(location.label);
-		const encounters = location.encounters.map(([label, defense, damage, gold]) =>
-			({ label, defense, damage, gold, trap: defense === null })
+		const encounters = location.encounters.map(([label, attack, damage, gold]) =>
+			({ label, attack, damage, gold })
 		);
 		return { ...location, id, encounters };
 	});
@@ -58,57 +84,50 @@
 
 	function newGame () {
 		log = [];
-		pushEvent(NEW_GAME, {
-			gold: GOLD,
-			health: HEALTH
-		});
+		const gold = GOLD;
+		const health = HEALTH;
+		const location = null;
+		pushEvent(NEW_GAME, { gold, health, location });
 	}
 
 	function travel () {
 		pushEvent(TRAVEL);
 	}
 
-	function travelToLocation (id) {
-		pushEvent(TRAVEL_TO_LOCATION, {
-			location: id,
-			getLocation: () => locations.find((location) => location.id === id)
-		});
+	function travelToLocation (location) {
+		pushEvent(TRAVEL_TO_LOCATION, { location });
 	}
 
 	function explore () {
 		const { encounters } = event.getLocation();
 		const result = roll(encounters.length);
 		const encounter = encounters[result - 1];
-		const type = encounter.trap ? ENCOUNTER_TRAP : ENCOUNTER_FOE;
-		pushEvent(type, {
-			encounter,
-			result
-		});
+		if (encounter.attack === 0) {
+			const trap = encounter;
+			pushEvent(ENCOUNTER_TRAP, { trap });
+		} else {
+			const foe = encounter;
+			pushEvent(ENCOUNTER_FOE, { foe });
+		}
 	}
 
 	function encounterTrap () {
-		const { damage, gold } = event.encounter;
-		const result = gold === 'd6' ? roll() : 0;
-		pushEvent(TAKE_DAMAGE_FROM_TRAP, {
-			gold: event.gold + result,
-			health: event.health - damage,
-			result
-		});
+		const { trap } = event;
+		const { damage, gold } = trap;
+		const gainGold = gold === 'd6' ? roll() : 0;
+		const takeDamage = damage === 'd6' ? roll() : damage;
+		pushEvent(TAKE_DAMAGE_FROM_TRAP, { gainGold, takeDamage, trap });
 	}
 
 	function encounterFoe () {
-		const result = roll();
-		const { damage, defense, gold } = event.encounter;
-		if (result > defense) {
-			pushEvent(DEFEAT_FOE, {
-				gold: event.gold + gold,
-				result
-			});
+		const attack = roll();
+		const { foe } = event;
+		if (attack > foe.attack) {
+			const gainGold = foe.gold;
+			pushEvent(DEFEAT_FOE, { attack, foe, gainGold });
 		} else {
-			pushEvent(TAKE_DAMAGE_FROM_FOE, {
-				health: event.health - damage,
-				result
-			});
+			const takeDamage = foe.damage;
+			pushEvent(TAKE_DAMAGE_FROM_FOE, { attack, foe, takeDamage });
 		}
 	}
 
@@ -116,12 +135,24 @@
 		return Math.ceil(Math.random() * max);
 	}
 
-	function pushEvent (type, details) {
+	function pushEvent (type, details = {}) {
+		const {
+			gainGold = 0,
+			gold = event.gold,
+			heal = 0,
+			health = event.health,
+			location = event.location,
+			takeDamage = 0
+		} = details;
+		const getLocation = () => locations.find((l) => l.id === location)
 		const nextEvent = {
-			...event,
+			...details,
 			createdAt: new Date(),
-			type,
-			...details
+			getLocation,
+			gold: gold + gainGold,
+			health: health - takeDamage + heal,
+			location,
+			type
 		};
 		log = [...log, nextEvent];
 		document.getElementById('current-event').focus();
@@ -135,8 +166,8 @@
 	function defeatedFoes (log) {
 		const foes = log
 			.filter(({ type }) => type === DEFEAT_FOE)
-			.reduce((map, { encounter }) => {
-				const { label } = encounter;
+			.reduce((map, { foe }) => {
+				const { label } = foe;
 				if (!map.has(label)) {
 					map.set(label, 0);
 				}
@@ -173,21 +204,21 @@
 			<p><button on:click={explore}>Explore</button></p>
 		{/if}
 		{#if event.type === ENCOUNTER_FOE}
-			<p>You encounter {getArticle(event.encounter.label)} <strong>{event.encounter.label}</strong>.</p>
-			<p><strong>Roll {event.encounter.defense + 1}{event.encounter.defense + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.encounter.gold} gold</strong>.<br>Otherwise, take <strong>{event.encounter.damage} damage</strong>.</p>
+			<p>You encounter {getArticle(event.foe.label)} <strong>{event.foe.label}</strong>.</p>
+			<p><strong>Roll {event.foe.attack + 1}{event.foe.attack + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.foe.gold} gold</strong>.<br>Otherwise, take <strong>{event.foe.damage} damage</strong>.</p>
 			<p><button on:click={encounterFoe}>Fight</button></p>
 		{/if}
 		{#if event.type === ENCOUNTER_TRAP}
-			<p>You encounter {getArticle(event.encounter.label)} <strong>{event.encounter.label}</strong>.</p>
+			<p>You encounter {getArticle(event.trap.label)} <strong>{event.trap.label}</strong>.</p>
 			<p><button on:click={encounterTrap}>Continue</button></p>
 		{/if}
 		{#if event.type === DEFEAT_FOE}
-			<p>You <strong>rolled {event.result}</strong> and defeat the <strong>{event.encounter.label}</strong>.</p>
-			<p>Gain <strong>{event.encounter.gold} gold</strong>.</p>
+			<p>You <strong>rolled {event.attack}</strong> and defeat the <strong>{event.foe.label}</strong>.</p>
+			<p>Gain <strong>{event.gainGold} gold</strong>.</p>
 			<p><button on:click={explore}>Explore</button></p>
 		{/if}
 		{#if event.type === TAKE_DAMAGE_FROM_FOE}
-			<p>You <strong>rolled {event.result}</strong> and take <strong>{event.encounter.damage} damage</strong> from the <strong>{event.encounter.label}</strong>.</p>
+			<p>You <strong>rolled {event.attack}</strong> and take <strong>{event.takeDamage} damage</strong> from the <strong>{event.foe.label}</strong>.</p>
 			{#if event.health <= 0}
 				<p>You die.</p>
 				<p><button on:click={newGame}>New game</button></p>
@@ -196,9 +227,9 @@
 			{/if}
 		{/if}
 		{#if event.type === TAKE_DAMAGE_FROM_TRAP}
-			<p>Take <strong>{event.encounter.damage} damage</strong> from the <strong>{event.encounter.label}</strong>.</p>
-			{#if event.encounter.gold === 'd6'}
-				<p>You discover <strong>{event.result} gold</strong>.</p>
+			<p>Take <strong>{event.takeDamage} damage</strong> from the <strong>{event.trap.label}</strong>.</p>
+			{#if event.gainGold}
+				<p>You discover <strong>{event.gainGold} gold</strong>.</p>
 			{/if}
 			{#if event.health <= 0}
 				<p>You die.</p>
