@@ -87,3 +87,13 @@ h1 {
 	line-height: var(--lh-4);
 	margin: var(--size-2) 0 0;
 }
+
+.u-sr-only {
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}

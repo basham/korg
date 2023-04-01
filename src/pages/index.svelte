@@ -12,10 +12,12 @@
 	const TAKE_DAMAGE_FROM_FOE = Symbol('take damage from foe');
 	const TAKE_DAMAGE_FROM_TRAP = Symbol('take damage from trap');
 	const SHOP = Symbol('shop');
+	const BUY_ITEM = Symbol('buy item');
+	const USE_ITEM = Symbol('use item');
 
 	const ROLL = Symbol('roll');
 
-	const GOLD = 0;
+	const GOLD = 10;
 	const HEALTH = 20;
 
 	const ruinLocation = {
@@ -79,8 +81,27 @@
 		return { ...location, id, encounters };
 	});
 
+	const ITEM_SINGLE_USE = Symbol('item single use');
+	const ITEM_MULTI_USE = Symbol('item multi-use');
+
+	const shopItems = [
+		['Rope', 2, 'Avoid trap once.', ITEM_SINGLE_USE, [ENCOUNTER_TRAP]],
+		['Caltrops', 2, 'Flee foe once.', ITEM_SINGLE_USE, [ENCOUNTER_FOE]],
+		['Shield', 3, 'Avoid damage once.', ITEM_SINGLE_USE, [ENCOUNTER_FOE, ENCOUNTER_TRAP]],
+		['Potion', 4, 'Heal d6 health.', ITEM_SINGLE_USE, [IDLE]],
+		['Lithe boots', 4, 'Roll 3+ to flee foe.', ITEM_MULTI_USE, [ENCOUNTER_FOE]],
+		['Sword', 5, '+1 attack.', ITEM_MULTI_USE, []],
+		['High potion', 7, 'Heal 2d6 health.', ITEM_SINGLE_USE, [ENCOUNTER_FOE, ENCOUNTER_TRAP, IDLE]],
+		['Death scroll', 8, 'Defeat one foe.', ITEM_SINGLE_USE, [ENCOUNTER_FOE]],
+		['Armor', 10, '-1 damage.', ITEM_MULTI_USE, []]
+	].map(([label, cost, description, useType, eventTypes, ]) => ({
+		id: Symbol(label), label, cost, description, useType, eventTypes
+	}));
+
 	let log = [];
 	$: event = log.at(-1) || {};
+	$: items = getItems(log);
+	$: shopInventory = getShopInventory(log);
 
 	onMount(() => {
 		newGame();
@@ -143,6 +164,17 @@
 		pushEvent(SHOP);
 	}
 
+	function buyItem (item) {
+		const getItem = () => shopItems.find((i) => i.id === item);
+		const { cost } = getItem();
+		const gainGold = cost * -1;
+		pushEvent(BUY_ITEM, { gainGold, getItem, item });
+	}
+
+	function useItem (item) {
+		pushEvent(USE_ITEM, { item });
+	}
+
 	function roll (max = 6) {
 		return Math.ceil(Math.random() * max);
 	}
@@ -189,11 +221,56 @@
 		return [...foes.entries()]
 			.map(([label, count]) => `${label} (${count})`);
 	}
+
+	function getItems () {
+		const inventory = log.reduce((map, event) => {
+			if (event.type === BUY_ITEM) {
+				const { item } = event;
+				if (!map.has(item)) {
+					map.set(item, 0);
+				}
+				map.set(item, map.get(item) + 1);
+			}
+			if (event.type === USE_ITEM) {
+				const { item } = event;
+				map.set(item, map.get(item) - 1);
+				if (map.get(item) === 0) {
+					map.delete(item);
+				}
+			}
+			return map;
+		}, new Map());
+		return [...inventory.entries()].map(([id, count]) => {
+			const item = shopItems.find((item) => item.id === id);
+			return { ...item, count };
+		})
+	}
+
+	function getShopInventory () {
+		const alreadyPurchased = items
+			.filter(({ useType }) => useType === ITEM_MULTI_USE)
+			.map(({ id }) => id);
+		const availableItems = shopItems
+			.filter(({ id, useType }) => useType === ITEM_SINGLE_USE || (useType === ITEM_MULTI_USE && !alreadyPurchased.includes(id)));
+		const affordable = availableItems
+			.filter(({ cost }) => cost <= event.gold);
+		const other = availableItems
+			.filter(({ cost }) => cost > event.gold);
+		return { affordable, other }
+	}
 </script>
 
 <Layout>
 	<h1>Korg</h1>
 	<p class="status">{event.health} health<br>{event.gold} gold</p>
+	{#if items.length}
+		<p>Items:</p>
+		<ul>
+			{#each items as item}
+				<li><strong>{`${item.label}${item.count > 1 ? ` [${item.count}]`: ''}`}:</strong> {item.description}</li>
+			{/each}
+		</ul>
+	{/if}
 	{#if event.location}
 		<p>Location: {event.getLocation().label || '(none)'}</p>
 	{/if}
@@ -257,7 +334,33 @@
 		{/if}
 		{#if event.type === SHOP}
 			<p>You enter the shop.</p>
+			{#if shopInventory.affordable.length}
+				<p>What would you like to buy?</p>
+				<ul>
+				{#each shopInventory.affordable as item}
+					<li>
+						<strong>{item.label}:</strong>
+						{item.description}
+						Costs {item.cost} gold.
+						<button on:click={() => buyItem(item.id)}>Buy<span class="u-sr-only"> {item.label}</span></button>
+					</li>
+				{/each}
+				</ul>
+			{:else}
+				<p>Everything is too expensive.</p>
+			{/if}
+			<p>Browse other items:</p>
+			<ul>
+			{#each shopInventory.other as item}
+				<li><strong>{item.label}:</strong> {item.description} Costs {item.cost} gold.</li>
+			{/each}
+			</ul>
 			<p><button on:click={idle}>Exit shop</button></p>
+		{/if}
+		{#if event.type === BUY_ITEM}
+			{@const { label } = event.getItem()}
+			<p>You purchased {getArticle(label)} <strong>{label}</strong>.</p>
+			<p><button on:click={idle}>Continue</button></p>
 		{/if}
 	</article>
 </Layout>
