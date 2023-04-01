@@ -5,11 +5,14 @@
 	const NEW_GAME = Symbol('new game');
 	const TRAVEL = Symbol('travel');
 	const TRAVEL_TO_LOCATION = Symbol('travel to location');
+	const IDLE = Symbol('idle');
 	const ENCOUNTER_FOE = Symbol('encounter foe');
 	const ENCOUNTER_TRAP = Symbol('encounter trap');
 	const DEFEAT_FOE = Symbol('defeat foe');
 	const TAKE_DAMAGE_FROM_FOE = Symbol('take damage from foe');
 	const TAKE_DAMAGE_FROM_TRAP = Symbol('take damage from trap');
+	const SHOP = Symbol('shop');
+
 	const ROLL = Symbol('roll');
 
 	const GOLD = 0;
@@ -99,6 +102,10 @@
 		pushEvent(TRAVEL_TO_LOCATION, { location });
 	}
 
+	function idle () {
+		pushEvent(IDLE);
+	}
+
 	function explore () {
 		const { encounters } = event.getLocation();
 		const result = roll(encounters.length);
@@ -130,6 +137,10 @@
 			const takeDamage = foe.damage;
 			pushEvent(TAKE_DAMAGE_FROM_FOE, { attack, foe, takeDamage });
 		}
+	}
+
+	function shop () {
+		pushEvent(SHOP);
 	}
 
 	function roll (max = 6) {
@@ -202,12 +213,17 @@
 		{/if}
 		{#if event.type === TRAVEL_TO_LOCATION}
 			<p>You enter the {event.getLocation().label}.</p>
+			<p><button on:click={idle}>Continue</button></p>
+		{/if}
+		{#if event.type === IDLE}
+			<p>What would you like to do?</p>
 			<p><button on:click={explore}>Explore</button></p>
+			<p><button on:click={shop}>Shop</button></p>
 		{/if}
 		{#if event.type === ENCOUNTER_FOE}
 			<p>You encounter {getArticle(event.foe.label)} <strong>{event.foe.label}</strong>.</p>
 			<p><strong>Roll {event.foe.attack + 1}{event.foe.attack + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.foe.gold} gold</strong>.<br>Otherwise, take <strong>{event.foe.damage} damage</strong>.</p>
-			<p><button on:click={encounterFoe}>Fight</button></p>
+			<p><button on:click={encounterFoe}>Attack</button></p>
 		{/if}
 		{#if event.type === ENCOUNTER_TRAP}
 			<p>You encounter {getArticle(event.trap.label)} <strong>{event.trap.label}</strong>.</p>
@@ -216,7 +232,7 @@
 		{#if event.type === DEFEAT_FOE}
 			<p>You <strong>rolled {event.attack}</strong> and defeat the <strong>{event.foe.label}</strong>.</p>
 			<p>Gain <strong>{event.gainGold} gold</strong>.</p>
-			<p><button on:click={explore}>Explore</button></p>
+			<p><button on:click={idle}>Continue</button></p>
 		{/if}
 		{#if event.type === TAKE_DAMAGE_FROM_FOE}
 			<p>You <strong>rolled {event.attack}</strong> and take <strong>{event.takeDamage} damage</strong> from the <strong>{event.foe.label}</strong>.</p>
@@ -224,7 +240,7 @@
 				<p>You die.</p>
 				<p><button on:click={newGame}>New game</button></p>
 			{:else}
-				<p><button on:click={explore}>Explore</button></p>
+				<p><button on:click={idle}>Continue</button></p>
 			{/if}
 		{/if}
 		{#if event.type === TAKE_DAMAGE_FROM_TRAP}
@@ -236,8 +252,12 @@
 				<p>You die.</p>
 				<p><button on:click={newGame}>New game</button></p>
 			{:else}
-				<p><button on:click={explore}>Explore</button></p>
+				<p><button on:click={idle}>Continue</button></p>
 			{/if}
+		{/if}
+		{#if event.type === SHOP}
+			<p>You enter the shop.</p>
+			<p><button on:click={idle}>Exit shop</button></p>
 		{/if}
 	</article>
 </Layout>
