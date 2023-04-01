@@ -1,8 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
 	import Layout from './layout.svelte';
+	import { events as allEvents } from '@src/events.js';
+	import { newGame } from '@src/events/new-game.svelte';
+	import { currentEvent } from '@src/log.js';
 
-	const NEW_GAME = Symbol('new game');
 	const TRAVEL = Symbol('travel');
 	const TRAVEL_TO_LOCATION = Symbol('travel to location');
 	const IDLE = Symbol('idle');
@@ -16,9 +18,6 @@
 	const USE_ITEM = Symbol('use item');
 
 	const ROLL = Symbol('roll');
-
-	const GOLD = 10;
-	const HEALTH = 20;
 
 	const ruinLocation = {
 		label: 'Ruins',
@@ -98,29 +97,20 @@
 		id: Symbol(label), label, cost, description, useType, eventTypes
 	}));
 
+	let event
+
+	currentEvent.subscribe((e) => {
+		event = e;
+		document.getElementById('current-event')?.focus();
+	});
+
 	let log = [];
-	$: event = log.at(-1) || {};
+	//$: event = log.at(-1) || {};
 	$: shopInventory = getShopInventory(event);
 
 	onMount(() => {
 		newGame();
 	});
-
-	function newGame () {
-		log = [];
-		const gold = GOLD;
-		const health = HEALTH;
-		const location = null;
-		pushEvent(NEW_GAME, { gold, health, location });
-	}
-
-	function travel () {
-		pushEvent(TRAVEL);
-	}
-
-	function travelToLocation (location) {
-		pushEvent(TRAVEL_TO_LOCATION, { location });
-	}
 
 	function idle () {
 		pushEvent(IDLE);
@@ -271,31 +261,13 @@
 		</ul>
 	{/if}
 	{#if event.location}
-		<p>Location: {event.getLocation().label || '(none)'}</p>
+		<p>Location: {event.location.name}</p>
 	{/if}
 	{#if defeatedFoes(log).length}
 		<p>Defeated foes: {defeatedFoes(log).join(', ')}</p>
 	{/if}
 	<article aria-label="Current event" class="event" id="current-event" tabindex="-1">
-		{#if event.type === NEW_GAME}
-			<p>You are an adventurer.</p>
-			<p><button on:click={travel}>Start traveling</button></p>
-		{/if}
-		{#if event.type === TRAVEL}
-			<p>Pick a location.</p>
-			{#each locations as location}
-				<p><button on:click={() => travelToLocation(location.id)}>{location.label}</button></p>
-			{/each}
-		{/if}
-		{#if event.type === TRAVEL_TO_LOCATION}
-			<p>You enter the {event.getLocation().label}.</p>
-			<p><button on:click={idle}>Continue</button></p>
-		{/if}
-		{#if event.type === IDLE}
-			<p>What would you like to do?</p>
-			<p><button on:click={explore}>Explore</button></p>
-			<p><button on:click={shop}>Shop</button></p>
-		{/if}
+		<svelte:component this={allEvents[event.type]} />
 		{#if event.type === ENCOUNTER_FOE}
 			<p>You encounter {getArticle(event.foe.label)} <strong>{event.foe.label}</strong>.</p>
 			<p><strong>Roll {event.foe.attack + 1}{event.foe.attack + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.foe.gold} gold</strong>.<br>Otherwise, take <strong>{event.foe.damage} damage</strong>.</p>
