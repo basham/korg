@@ -5,8 +5,10 @@ const log = writable([]);
 
 export const currentEvent = derived(log, ($log) => $log.at(-1) || {});
 
+export const getCurrentEvent = () => get(currentEvent);
+
 export function pushEvent(type, details = {}) {
-	const event = get(currentEvent);
+	const event = getCurrentEvent();
 	const {
 		changeItems = (i) => i,
 		gainGold = 0,
@@ -26,7 +28,7 @@ export function pushEvent(type, details = {}) {
 		gold: gold + gainGold,
 		health: health - takeDamage + heal,
 		items: changeItems(items),
-		type,
+		type
 	};
 	log.update((l) => [...l, nextEvent]);
 }

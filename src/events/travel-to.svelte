@@ -1,12 +1,6 @@
-<script context="module">
-	import { currentEvent, pushEvent } from '@src/log.js';
-	import { idle } from './idle.svelte';
-
-	export const id = Symbol('travel to');
-
-	export function travelTo(location) {
-		pushEvent(id, { location });
-	}
+<script>
+	import { idle } from '@src/actions.js';
+	import { currentEvent } from '@src/log.js';
 </script>
 
 <p>You enter the {$currentEvent.location.name}.</p>

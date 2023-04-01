@@ -2,11 +2,9 @@
 	import { onMount } from 'svelte';
 	import Layout from './layout.svelte';
 	import { events as allEvents } from '@src/events.js';
-	import { newGame } from '@src/events/new-game.svelte';
+	import { newGame } from '@src/actions.js';
 	import { currentEvent } from '@src/log.js';
 
-	const TRAVEL = Symbol('travel');
-	const TRAVEL_TO_LOCATION = Symbol('travel to location');
 	const IDLE = Symbol('idle');
 	const ENCOUNTER_FOE = Symbol('encounter foe');
 	const ENCOUNTER_TRAP = Symbol('encounter trap');
@@ -101,6 +99,7 @@
 
 	currentEvent.subscribe((e) => {
 		event = e;
+		console.log('E', e)
 		document.getElementById('current-event')?.focus();
 	});
 
@@ -114,27 +113,6 @@
 
 	function idle () {
 		pushEvent(IDLE);
-	}
-
-	function explore () {
-		const { encounters } = event.getLocation();
-		const result = roll(encounters.length);
-		const encounter = encounters[result - 1];
-		if (encounter.attack === 0) {
-			const trap = encounter;
-			pushEvent(ENCOUNTER_TRAP, { trap });
-		} else {
-			const foe = encounter;
-			pushEvent(ENCOUNTER_FOE, { foe });
-		}
-	}
-
-	function encounterTrap () {
-		const { trap } = event;
-		const { damage, gold } = trap;
-		const gainGold = gold === ROLL ? roll() : 0;
-		const takeDamage = damage === ROLL ? roll() : damage;
-		pushEvent(TAKE_DAMAGE_FROM_TRAP, { gainGold, takeDamage, trap });
 	}
 
 	function encounterFoe () {
@@ -273,10 +251,6 @@
 			<p><strong>Roll {event.foe.attack + 1}{event.foe.attack + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.foe.gold} gold</strong>.<br>Otherwise, take <strong>{event.foe.damage} damage</strong>.</p>
 			<p><button on:click={encounterFoe}>Attack</button></p>
 		{/if}
-		{#if event.type === ENCOUNTER_TRAP}
-			<p>You encounter {getArticle(event.trap.label)} <strong>{event.trap.label}</strong>.</p>
-			<p><button on:click={encounterTrap}>Continue</button></p>
-		{/if}
 		{#if event.type === DEFEAT_FOE}
 			<p>You <strong>rolled {event.attack}</strong> and defeat the <strong>{event.foe.label}</strong>.</p>
 			<p>Gain <strong>{event.gainGold} gold</strong>.</p>
@@ -284,18 +258,6 @@
 		{/if}
 		{#if event.type === TAKE_DAMAGE_FROM_FOE}
 			<p>You <strong>rolled {event.attack}</strong> and take <strong>{event.takeDamage} damage</strong> from the <strong>{event.foe.label}</strong>.</p>
-			{#if event.health <= 0}
-				<p>You die.</p>
-				<p><button on:click={newGame}>New game</button></p>
-			{:else}
-				<p><button on:click={idle}>Continue</button></p>
-			{/if}
-		{/if}
-		{#if event.type === TAKE_DAMAGE_FROM_TRAP}
-			<p>Take <strong>{event.takeDamage} damage</strong> from the <strong>{event.trap.label}</strong>.</p>
-			{#if event.gainGold}
-				<p>You discover <strong>{event.gainGold} gold</strong>.</p>
-			{/if}
 			{#if event.health <= 0}
 				<p>You die.</p>
 				<p><button on:click={newGame}>New game</button></p>
