@@ -100,8 +100,7 @@
 
 	let log = [];
 	$: event = log.at(-1) || {};
-	$: items = getItems(log);
-	$: shopInventory = getShopInventory(log);
+	$: shopInventory = getShopInventory(event);
 
 	onMount(() => {
 		newGame();
@@ -166,13 +165,18 @@
 
 	function buyItem (item) {
 		const getItem = () => shopItems.find((i) => i.id === item);
+		const changeItems = (items) => [...items, item];
 		const { cost } = getItem();
 		const gainGold = cost * -1;
-		pushEvent(BUY_ITEM, { gainGold, getItem, item });
+		pushEvent(BUY_ITEM, { gainGold, getItem, item, changeItems });
 	}
 
 	function useItem (item) {
-		pushEvent(USE_ITEM, { item });
+		const changeItems = (items) => {
+			const index = items.indexOf(item);
+			return index === -1 ? items : items.splice(index, 1);
+		}
+		pushEvent(USE_ITEM, { item, changeItems });
 	}
 
 	function roll (max = 6) {
@@ -181,20 +185,23 @@
 
 	function pushEvent (type, details = {}) {
 		const {
+			changeItems = (i) => i,
 			gainGold = 0,
 			gold = event.gold,
 			heal = 0,
 			health = event.health,
+			items = (event.items || []),
 			location = event.location,
 			takeDamage = 0
 		} = details;
-		const getLocation = () => locations.find((l) => l.id === location)
+		const getLocation = () => locations.find((l) => l.id === location);
 		const nextEvent = {
 			...details,
 			createdAt: new Date(),
 			getLocation,
 			gold: gold + gainGold,
 			health: health - takeDamage + heal,
+			items: changeItems(items),
 			location,
 			type
 		};
@@ -222,22 +229,13 @@
 			.map(([label, count]) => `${label} (${count})`);
 	}
 
-	function getItems () {
-		const inventory = log.reduce((map, event) => {
-			if (event.type === BUY_ITEM) {
-				const { item } = event;
-				if (!map.has(item)) {
-					map.set(item, 0);
-				}
-				map.set(item, map.get(item) + 1);
+	function getItems (event) {
+		const { items = [] } = event;
+		const inventory = items.reduce((map, item) => {
+			if (!map.has(item)) {
+				map.set(item, 0);
 			}
-			if (event.type === USE_ITEM) {
-				const { item } = event;
-				map.set(item, map.get(item) - 1);
-				if (map.get(item) === 0) {
-					map.delete(item);
-				}
-			}
+			map.set(item, map.get(item) + 1);
 			return map;
 		}, new Map());
 		return [...inventory.entries()].map(([id, count]) => {
@@ -247,6 +245,7 @@
 	}
 
 	function getShopInventory () {
+		const { items = [] } = event;
 		const alreadyPurchased = items
 			.filter(({ useType }) => useType === ITEM_MULTI_USE)
 			.map(({ id }) => id);
@@ -263,10 +262,10 @@
 <Layout>
 	<h1>Korg</h1>
 	<p class="status">{event.health} health<br>{event.gold} gold</p>
-	{#if items.length}
+	{#if getItems(event).length}
 		<p>Items:</p>
 		<ul>
-			{#each items as item}
+			{#each getItems(event) as item}
 				<li><strong>{`${item.label}${item.count > 1 ? ` [${item.count}]`: ''}`}:</strong> {item.description}</li>
 			{/each}
 		</ul>
