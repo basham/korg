@@ -10,73 +10,9 @@
 	const ENCOUNTER_TRAP = Symbol('encounter trap');
 	const DEFEAT_FOE = Symbol('defeat foe');
 	const TAKE_DAMAGE_FROM_FOE = Symbol('take damage from foe');
-	const TAKE_DAMAGE_FROM_TRAP = Symbol('take damage from trap');
 	const SHOP = Symbol('shop');
 	const BUY_ITEM = Symbol('buy item');
 	const USE_ITEM = Symbol('use item');
-
-	const ROLL = Symbol('roll');
-
-	const ruinLocation = {
-		label: 'Ruins',
-		encounters: [
-			['Pit trap', 0, 3, 0],
-			['Skeleton', 2, 2, 1],
-			['Goblin', 3, 2, 2],
-			['Wraith', 5, 2, 4],
-			['Ogre', 4, 4, 7],
-			['Demon', 4, 6, 10]
-		]
-	};
-
-	const catacombsLocation = {
-		label: 'Catacombs',
-		encounters: [
-			['Spike trap', 0, 4, ROLL],
-			['Zombie', 2, 2, 1],
-			['Ghoul', 2, 3, 2],
-			['Ghost', 4, 2, 4],
-			['Banshee', 3, 6, 7],
-			['Lich', 5, 4, 10]
-		]
-	};
-
-	const fetidSwampLocation = {
-		label: 'Fetid Swamp',
-		encounters: [
-			['Acid trap', 0, 0, -4],
-			['Croaker', 1, 3, 0],
-			['Snakefolk', 3, 3, 4],
-			['Slime', 4, 0, ROLL],
-			['Shaman', 4, 3, 6],
-			['Basilisk', 3, 8, 12]
-		]
-	};
-
-	const darkTowerLocation = {
-		label: 'Dark Tower',
-		encounters: [
-			['Crow', 2, 1, 0],
-			['Guard', 3, 2, 1],
-			['Gargoyle', 4, 2, 3],
-			['Werewolf', 3, 4, 5],
-			['Pendulumn trap', 0, ROLL, 0],
-			['Vampire', 5, 5, 11]
-		]
-	};
-
-	const locations = [
-		ruinLocation,
-		catacombsLocation,
-		fetidSwampLocation,
-		darkTowerLocation
-	].map((location) => {
-		const id = Symbol(location.label);
-		const encounters = location.encounters.map(([label, attack, damage, gold]) =>
-			({ label, attack, damage, gold })
-		);
-		return { ...location, id, encounters };
-	});
 
 	const ITEM_SINGLE_USE = Symbol('item single use');
 	const ITEM_MULTI_USE = Symbol('item multi-use');
@@ -124,10 +60,6 @@
 			const takeDamage = foe.damage;
 			pushEvent(TAKE_DAMAGE_FROM_FOE, { attack, foe, takeDamage });
 		}
-	}
-
-	function shop () {
-		pushEvent(SHOP);
 	}
 
 	function buyItem (item) {
