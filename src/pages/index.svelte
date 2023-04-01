@@ -1,14 +1,29 @@
 <script>
+	import { onMount } from 'svelte';
 	import Layout from './layout.svelte';
 
 	const IDLE = Symbol('idle');
 	const EXPLORE = Symbol('explore');
 	const SHOP = Symbol('shop');
 
-	let state = IDLE;
-	let hp = 20;
-	let gp = 0;
+	const NEW_GAME = Symbol('new game');
+	const ENCOUNTER = Symbol('encounter');
+	const FIGHT = Symbol('fight');
+
 	let log = [];
+	$: event = log.at(-1) || {};
+
+	onMount(() => {
+		newGame();
+	});
+
+	function newGame () {
+		log = [];
+		pushEvent(NEW_GAME, {
+			gold: 0,
+			health: 20
+		});
+	}
 
 	function shop () {
 		state = SHOP;
@@ -24,45 +39,35 @@
 			['Ogre', 4, 4, 7],
 			['Demon', 4, 6, 10]
 		].map(([label, defense, damage, gold]) =>
-			({ label, defense, damage, gold })
+			({ label, defense, damage, gold, trap: defense === null })
 		)
 	}
 
 	function explore () {
-		state = EXPLORE;
 		const result = roll();
 		const encounter = location.encounters[result - 1];
-		const event = {
-			createdAt: new Date(),
+		pushEvent(ENCOUNTER, {
 			encounter,
-			gp,
-			hp,
 			result,
-			type: 'encounter',
 			location
-		};
-		log = [...log, event];
+		});
 	}
 
 	function fight () {
-		state = IDLE;
-		const lastEvent = log.at(-1);
 		const result = roll();
-		const { encounter } = lastEvent;
+		const { encounter } = event;
 		const win = encounter.defense !== null && result > encounter.defense;
-		const event = {
-			createdAt: new Date(),
+		const goldDiff = win ? encounter.gold : 0;
+		const healthDiff = win ? 0 : encounter.damage;
+		pushEvent(FIGHT, {
 			encounter,
-			gp: gp + (win ? encounter.gold : 0),
-			hp: hp - (win ? 0 : encounter.damage),
+			gold: event.gold + goldDiff,
+			goldDiff,
+			health: event.health - healthDiff,
+			healthDiff,
 			result,
-			type: 'fight',
-			location,
 			win
-		};
-		hp = event.hp;
-		gp = event.gp;
-		log = [...log, event];
+		});
 	}
 
 	function flee () {
@@ -76,38 +81,54 @@
 	function roll () {
 		return Math.ceil(Math.random() * 6);
 	}
+
+	function pushEvent (type, details) {
+		const nextEvent = {
+			...event,
+			createdAt: new Date(),
+			type,
+			...details
+		};
+		log = [...log, nextEvent];
+	}
+
+	function getArticle (noun) {
+		const firstLetter = noun.toLowerCase()[0];
+		return 'aeiou'.includes(firstLetter) ? 'an' : 'a';
+	}
 </script>
 
 <Layout>
 	<h1>Korg</h1>
-	<div>{hp} HP</div>
-	<div>{gp} GP</div>
-	<div>
-		{#if state === IDLE}
-			<h2>Play</h2>
-			<button on:click={explore}>Explore</button>
-			<button on:click={shop}>Shop</button>
+	<p class="status">{event.health} health<br>{event.gold} gold</p>
+	<article aria-label="Current event" class="event" tabindex="-1">
+		{#if event.type === ENCOUNTER}
+			<p>You encounter {getArticle(event.encounter.label)} <strong>{event.encounter.label}</strong>.</p>
+			{#if event.encounter.trap}
+				<p>The trap cannot be avoided.<br>Take <strong>{event.encounter.damage} damage</strong>.</p>
+				<p><button on:click={fight}>Continue</button></p>
+			{:else}
+				<p>You cannot flee.</p>
+				<p><strong>Roll {event.encounter.defense + 1}{event.encounter.defense + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.encounter.gold} gold</strong>.<br>Otherwise, take <strong>{event.encounter.damage} damage</strong>.</p>
+				<p><button on:click={fight}>Fight</button></p>
+			{/if}
 		{/if}
-		{#if state === EXPLORE}
-			<h2>Explore</h2>
-			<button on:click={fight}>Fight</button>
-			<button on:click={flee}>Flee</button>
+		{#if event.type === FIGHT && event.win}
+			<p>You <strong>rolled {event.result}</strong> and defeat the <strong>{event.encounter.label}</strong>.</p>
+			<p>Gain <strong>{event.encounter.gold} gold</strong>.</p>
 		{/if}
-		{#if state === SHOP}
-			<h2>Shop</h2>
-			<button on:click={leave}>Leave shop</button>
+		{#if event.type === FIGHT && !event.win}
+			<p>You <strong>rolled {event.result}</strong> and lose against the <strong>{event.encounter.label}</strong>.</p>
+			<p>Take <strong>{event.encounter.damage} damage</strong>.</p>
 		{/if}
-	</div>
-	<h2>Log</h2>
-	<ol>
-		{#each log as event}
-			<li>
-				<div>{event.type}</div>
-				<div>{event.location.label}</div>
-				<div>{event.encounter.label}</div>
-				<div>{event.hp} HP</div>
-				<div>{event.gp} GP</div>
-			</li>
-		{/each}
-	</ol>
+		{#if event.type === NEW_GAME || event.type === FIGHT}
+			<p><button on:click={explore}>Explore</button></p>
+		{/if}
+	</article>
 </Layout>
+
+<style>
+	.event {
+		border-top: var(--px-2) solid var(--color-base-5);
+	}
+</style>
