@@ -10,6 +10,7 @@
 	const DEFEAT_FOE = Symbol('defeat foe');
 	const TAKE_DAMAGE_FROM_FOE = Symbol('take damage from foe');
 	const TAKE_DAMAGE_FROM_TRAP = Symbol('take damage from trap');
+	const ROLL = Symbol('roll');
 
 	const GOLD = 0;
 	const HEALTH = 20;
@@ -29,7 +30,7 @@
 	const catacombsLocation = {
 		label: 'Catacombs',
 		encounters: [
-			['Spike trap', 0, 4, 'd6'],
+			['Spike trap', 0, 4, ROLL],
 			['Zombie', 2, 2, 1],
 			['Ghoul', 2, 3, 2],
 			['Ghost', 4, 2, 4],
@@ -44,7 +45,7 @@
 			['Acid trap', 0, 0, -4],
 			['Croaker', 1, 3, 0],
 			['Snakefolk', 3, 3, 4],
-			['Slime', 4, 0, 'd6'],
+			['Slime', 4, 0, ROLL],
 			['Shaman', 4, 3, 6],
 			['Basilisk', 3, 8, 12]
 		]
@@ -57,7 +58,7 @@
 			['Guard', 3, 2, 1],
 			['Gargoyle', 4, 2, 3],
 			['Werewolf', 3, 4, 5],
-			['Pendulumn trap', 0, 'd6', 0],
+			['Pendulumn trap', 0, ROLL, 0],
 			['Vampire', 5, 5, 11]
 		]
 	};
@@ -114,8 +115,8 @@
 	function encounterTrap () {
 		const { trap } = event;
 		const { damage, gold } = trap;
-		const gainGold = gold === 'd6' ? roll() : 0;
-		const takeDamage = damage === 'd6' ? roll() : damage;
+		const gainGold = gold === ROLL ? roll() : 0;
+		const takeDamage = damage === ROLL ? roll() : damage;
 		pushEvent(TAKE_DAMAGE_FROM_TRAP, { gainGold, takeDamage, trap });
 	}
 
