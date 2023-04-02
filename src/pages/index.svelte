@@ -3,13 +3,9 @@
 	import Layout from './layout.svelte';
 	import { events as allEvents } from '@src/events.js';
 	import { newGame } from '@src/actions.js';
+	import { DEFEAT_FOE } from '@src/constants.js';
 	import { currentEvent } from '@src/log.js';
 	import { shopItems } from '@src/shop.js';
-
-	const IDLE = Symbol('idle');
-	const DEFEAT_FOE = Symbol('defeat foe');
-	const BUY_ITEM = Symbol('buy item');
-	const USE_ITEM = Symbol('use item');
 
 	/*
 	const shopItems = [
@@ -35,53 +31,17 @@
 	});
 
 	let log = [];
-	//$: event = log.at(-1) || {};
 
 	onMount(() => {
 		newGame();
 	});
-
-	function idle () {
-		pushEvent(IDLE);
-	}
 
 	function useItem (item) {
 		const changeItems = (items) => {
 			const index = items.indexOf(item);
 			return index === -1 ? items : items.splice(index, 1);
 		}
-		pushEvent(USE_ITEM, { item, changeItems });
-	}
-
-	function pushEvent (type, details = {}) {
-		const {
-			changeItems = (i) => i,
-			gainGold = 0,
-			gold = event.gold,
-			heal = 0,
-			health = event.health,
-			items = (event.items || []),
-			location = event.location,
-			takeDamage = 0
-		} = details;
-		const getLocation = () => locations.find((l) => l.id === location);
-		const nextEvent = {
-			...details,
-			createdAt: new Date(),
-			getLocation,
-			gold: gold + gainGold,
-			health: health - takeDamage + heal,
-			items: changeItems(items),
-			location,
-			type
-		};
-		log = [...log, nextEvent];
-		document.getElementById('current-event').focus();
-	}
-
-	function getArticle (noun) {
-		const firstLetter = noun.toLowerCase()[0];
-		return 'aeiou'.includes(firstLetter) ? 'an' : 'a';
+		// pushEvent(USE_ITEM, { item, changeItems });
 	}
 
 	function defeatedFoes (log) {
