@@ -8,10 +8,10 @@ export const locations = [
 	darkTower,
 	fetidSwamp,
 	ruins
-].map((loc) => {
-	const { name } = loc;
+].map((location) => {
+	const { name } = location;
 	const id = Symbol(name);
-	const encounters = loc.encounters.map(
+	const encounters = location.encounters.map(
 		([name, attack, damage, gold]) => ({ name, attack, damage, gold })
 	);
 	return { id, encounters, name };
