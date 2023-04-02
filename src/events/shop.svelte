@@ -1,5 +1,5 @@
 <script>
-	import { buyItem, idle } from '@src/actions.js';
+	import { addItem, idle } from '@src/actions.js';
 	import { ITEM_MULTI_USE, ITEM_SINGLE_USE } from '@src/constants.js';
 	import { currentEvent } from '@src/log.js';
 	import { shopItems } from '@src/shop.js';
@@ -30,7 +30,7 @@
 			<strong>{item.name}:</strong>
 			{item.description}
 			Costs {item.cost} gold.
-			<button on:click={() => buyItem(item.id)}>Buy<span class="u-sr-only"> {item.name}</span></button>
+			<button on:click={() => addItem(item.id)}>Buy<span class="u-sr-only"> {item.name}</span></button>
 		</li>
 	{/each}
 	</ul>

@@ -1,5 +1,5 @@
 import {
-	BUY_ITEM,
+	ADD_ITEM,
 	DEFEAT_FOE,
 	ENCOUNTER_FOE,
 	ENCOUNTER_TRAP,
@@ -11,7 +11,7 @@ import {
 	TRAVEL,
 	TRAVEL_TO
 } from '@src/constants.js';
-import BuyItem from './buy-item.svelte';
+import AddItem from './add-item.svelte';
 import DefeatFoe from './defeat-foe.svelte';
 import EncounterFoe from './encounter-foe.svelte';
 import EncounterTrap from './encounter-trap.svelte';
@@ -24,7 +24,7 @@ import Travel from './travel.svelte';
 import TravelTo from './travel-to.svelte';
 
 export const events = {
-	[BUY_ITEM]: BuyItem,
+	[ADD_ITEM]: AddItem,
 	[DEFEAT_FOE]: DefeatFoe,
 	[ENCOUNTER_FOE]: EncounterFoe,
 	[ENCOUNTER_TRAP]: EncounterTrap,

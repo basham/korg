@@ -1,12 +1,13 @@
 export const GOLD = 10;
 export const HEALTH = 20;
 
-export const BUY_ITEM = Symbol('buy item');
+export const ADD_ITEM = Symbol('add item');
 export const DEFEAT_FOE = Symbol('defeat foe');
 export const ENCOUNTER_FOE = Symbol('encounter foe');
 export const ENCOUNTER_TRAP = Symbol('encounter trap');
 export const IDLE = Symbol('idle');
 export const NEW_GAME = Symbol('new game');
+export const REMOVE_ITEM = Symbol('remove item');
 export const RESOLVE_FOE = Symbol('resolve foe');
 export const RESOLVE_TRAP = Symbol('resolve trap');
 export const SHOP = Symbol('shop');
