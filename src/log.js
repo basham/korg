@@ -10,7 +10,6 @@ export const getCurrentEvent = () => get(currentEvent);
 export function pushEvent(type, details = {}) {
 	const event = getCurrentEvent();
 	const {
-		changeItems = (i) => i,
 		gainGold = 0,
 		gold = event.gold,
 		heal = 0,
@@ -25,8 +24,8 @@ export function pushEvent(type, details = {}) {
 		createdAt: new Date(),
 		gold: gold + gainGold,
 		health: health - takeDamage + heal,
-		items: changeItems(items),
-		get location() {
+		items,
+		get location () {
 			return locations.find(({ id }) => id === location);
 		}
 	};

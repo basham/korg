@@ -4,18 +4,14 @@
 	import { events as allEvents } from '@src/events.js';
 	import { newGame } from '@src/actions.js';
 	import { currentEvent } from '@src/log.js';
+	import { shopItems } from '@src/shop.js';
 
 	const IDLE = Symbol('idle');
-	const ENCOUNTER_FOE = Symbol('encounter foe');
-	const ENCOUNTER_TRAP = Symbol('encounter trap');
 	const DEFEAT_FOE = Symbol('defeat foe');
-	const SHOP = Symbol('shop');
 	const BUY_ITEM = Symbol('buy item');
 	const USE_ITEM = Symbol('use item');
 
-	const ITEM_SINGLE_USE = Symbol('item single use');
-	const ITEM_MULTI_USE = Symbol('item multi-use');
-
+	/*
 	const shopItems = [
 		['Rope', 2, 'Avoid trap once.', ITEM_SINGLE_USE, [ENCOUNTER_TRAP]],
 		['Caltrops', 2, 'Flee foe once.', ITEM_SINGLE_USE, [ENCOUNTER_FOE]],
@@ -29,6 +25,7 @@
 	].map(([label, cost, description, useType, eventTypes, ]) => ({
 		id: Symbol(label), label, cost, description, useType, eventTypes
 	}));
+	*/
 
 	let event
 
@@ -39,7 +36,6 @@
 
 	let log = [];
 	//$: event = log.at(-1) || {};
-	$: shopInventory = getShopInventory(event);
 
 	onMount(() => {
 		newGame();
@@ -47,14 +43,6 @@
 
 	function idle () {
 		pushEvent(IDLE);
-	}
-
-	function buyItem (item) {
-		const getItem = () => shopItems.find((i) => i.id === item);
-		const changeItems = (items) => [...items, item];
-		const { cost } = getItem();
-		const gainGold = cost * -1;
-		pushEvent(BUY_ITEM, { gainGold, getItem, item, changeItems });
 	}
 
 	function useItem (item) {
@@ -125,20 +113,6 @@
 			return { ...item, count };
 		})
 	}
-
-	function getShopInventory () {
-		const { items = [] } = event;
-		const alreadyPurchased = items
-			.filter(({ useType }) => useType === ITEM_MULTI_USE)
-			.map(({ id }) => id);
-		const availableItems = shopItems
-			.filter(({ id, useType }) => useType === ITEM_SINGLE_USE || (useType === ITEM_MULTI_USE && !alreadyPurchased.includes(id)));
-		const affordable = availableItems
-			.filter(({ cost }) => cost <= event.gold);
-		const other = availableItems
-			.filter(({ cost }) => cost > event.gold);
-		return { affordable, other }
-	}
 </script>
 
 <Layout>
@@ -148,7 +122,7 @@
 		<p>Items:</p>
 		<ul>
 			{#each getItems(event) as item}
-				<li><strong>{`${item.label}${item.count > 1 ? ` [${item.count}]`: ''}`}:</strong> {item.description}</li>
+				<li><strong>{`${item.name}${item.count > 1 ? ` [${item.count}]`: ''}`}:</strong> {item.description}</li>
 			{/each}
 		</ul>
 	{/if}
@@ -160,36 +134,6 @@
 	{/if}
 	<article aria-label="Current event" class="event" id="current-event" tabindex="-1">
 		<svelte:component this={allEvents[event.type]} />
-		{#if event.type === SHOP}
-			<p>You enter the shop.</p>
-			{#if shopInventory.affordable.length}
-				<p>What would you like to buy?</p>
-				<ul>
-				{#each shopInventory.affordable as item}
-					<li>
-						<strong>{item.label}:</strong>
-						{item.description}
-						Costs {item.cost} gold.
-						<button on:click={() => buyItem(item.id)}>Buy<span class="u-sr-only"> {item.label}</span></button>
-					</li>
-				{/each}
-				</ul>
-			{:else}
-				<p>Everything is too expensive.</p>
-			{/if}
-			<p>Browse other items:</p>
-			<ul>
-			{#each shopInventory.other as item}
-				<li><strong>{item.label}:</strong> {item.description} Costs {item.cost} gold.</li>
-			{/each}
-			</ul>
-			<p><button on:click={idle}>Exit shop</button></p>
-		{/if}
-		{#if event.type === BUY_ITEM}
-			{@const { label } = event.getItem()}
-			<p>You purchased {getArticle(label)} <strong>{label}</strong>.</p>
-			<p><button on:click={idle}>Continue</button></p>
-		{/if}
 	</article>
 </Layout>
 
