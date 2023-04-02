@@ -1,4 +1,4 @@
-import { ENCOUNTER_TRAP } from '@src/constants.js';
+import { ENCOUNTER_FOE, ENCOUNTER_TRAP } from '@src/constants.js';
 import { getCurrentEvent, pushEvent } from '@src/log.js';
 import { roll } from '@src/util.js';
 
@@ -12,6 +12,6 @@ export function explore () {
 		pushEvent(ENCOUNTER_TRAP, { trap });
 	} else {
 		const foe = encounter;
-		pushEvent('EF', { foe });
+		pushEvent(ENCOUNTER_FOE, { foe });
 	}
 }

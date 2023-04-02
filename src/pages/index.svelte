@@ -9,7 +9,6 @@
 	const ENCOUNTER_FOE = Symbol('encounter foe');
 	const ENCOUNTER_TRAP = Symbol('encounter trap');
 	const DEFEAT_FOE = Symbol('defeat foe');
-	const TAKE_DAMAGE_FROM_FOE = Symbol('take damage from foe');
 	const SHOP = Symbol('shop');
 	const BUY_ITEM = Symbol('buy item');
 	const USE_ITEM = Symbol('use item');
@@ -50,18 +49,6 @@
 		pushEvent(IDLE);
 	}
 
-	function encounterFoe () {
-		const attack = roll();
-		const { foe } = event;
-		if (attack > foe.attack) {
-			const gainGold = foe.gold;
-			pushEvent(DEFEAT_FOE, { attack, foe, gainGold });
-		} else {
-			const takeDamage = foe.damage;
-			pushEvent(TAKE_DAMAGE_FROM_FOE, { attack, foe, takeDamage });
-		}
-	}
-
 	function buyItem (item) {
 		const getItem = () => shopItems.find((i) => i.id === item);
 		const changeItems = (items) => [...items, item];
@@ -76,10 +63,6 @@
 			return index === -1 ? items : items.splice(index, 1);
 		}
 		pushEvent(USE_ITEM, { item, changeItems });
-	}
-
-	function roll (max = 6) {
-		return Math.ceil(Math.random() * max);
 	}
 
 	function pushEvent (type, details = {}) {
@@ -177,25 +160,6 @@
 	{/if}
 	<article aria-label="Current event" class="event" id="current-event" tabindex="-1">
 		<svelte:component this={allEvents[event.type]} />
-		{#if event.type === ENCOUNTER_FOE}
-			<p>You encounter {getArticle(event.foe.label)} <strong>{event.foe.label}</strong>.</p>
-			<p><strong>Roll {event.foe.attack + 1}{event.foe.attack + 1 < 6 ? '+' : ''}</strong> to defeat the foe and gain <strong>{event.foe.gold} gold</strong>.<br>Otherwise, take <strong>{event.foe.damage} damage</strong>.</p>
-			<p><button on:click={encounterFoe}>Attack</button></p>
-		{/if}
-		{#if event.type === DEFEAT_FOE}
-			<p>You <strong>rolled {event.attack}</strong> and defeat the <strong>{event.foe.label}</strong>.</p>
-			<p>Gain <strong>{event.gainGold} gold</strong>.</p>
-			<p><button on:click={idle}>Continue</button></p>
-		{/if}
-		{#if event.type === TAKE_DAMAGE_FROM_FOE}
-			<p>You <strong>rolled {event.attack}</strong> and take <strong>{event.takeDamage} damage</strong> from the <strong>{event.foe.label}</strong>.</p>
-			{#if event.health <= 0}
-				<p>You die.</p>
-				<p><button on:click={newGame}>New game</button></p>
-			{:else}
-				<p><button on:click={idle}>Continue</button></p>
-			{/if}
-		{/if}
 		{#if event.type === SHOP}
 			<p>You enter the shop.</p>
 			{#if shopInventory.affordable.length}
