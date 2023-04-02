@@ -7,22 +7,6 @@
 	import { currentEvent } from '@src/log.js';
 	import { shopItems } from '@src/shop.js';
 
-	/*
-	const shopItems = [
-		['Rope', 2, 'Avoid trap once.', ITEM_SINGLE_USE, [ENCOUNTER_TRAP]],
-		['Caltrops', 2, 'Flee foe once.', ITEM_SINGLE_USE, [ENCOUNTER_FOE]],
-		['Shield', 3, 'Avoid damage once.', ITEM_SINGLE_USE, [ENCOUNTER_FOE, ENCOUNTER_TRAP]],
-		['Potion', 4, 'Heal d6 health.', ITEM_SINGLE_USE, [IDLE]],
-		['Lithe boots', 4, 'Roll 3+ to flee foe.', ITEM_MULTI_USE, [ENCOUNTER_FOE]],
-		['Sword', 5, '+1 attack.', ITEM_MULTI_USE, []],
-		['High potion', 7, 'Heal 2d6 health.', ITEM_SINGLE_USE, [ENCOUNTER_FOE, ENCOUNTER_TRAP, IDLE]],
-		['Death scroll', 8, 'Defeat one foe.', ITEM_SINGLE_USE, [ENCOUNTER_FOE]],
-		['Armor', 10, '-1 damage.', ITEM_MULTI_USE, []]
-	].map(([label, cost, description, useType, eventTypes, ]) => ({
-		id: Symbol(label), label, cost, description, useType, eventTypes
-	}));
-	*/
-
 	let event
 
 	currentEvent.subscribe((e) => {
