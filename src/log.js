@@ -25,7 +25,7 @@ export function pushEvent(type, details = {}) {
 		createdAt: new Date(),
 		defeatedFoes,
 		gold: gold + gainGold,
-		health: health - takeDamage + heal,
+		health: Math.max(health - takeDamage + heal, 0),
 		items,
 		get location () {
 			return locations.find(({ id }) => id === location);
