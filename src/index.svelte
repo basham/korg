@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
-	import { events as allEvents } from '@src/events.js';
 	import { newGame } from '@src/actions.js';
+	import { events } from '@src/events.js';
 	import { currentEvent } from '@src/log.js';
 	import { shopItems } from '@src/shop.js';
 	import { count } from '@src/util.js';
@@ -56,7 +56,7 @@
 		<p>Defeated foes: {defeatedFoes.join(', ')}</p>
 	{/if}
 	<article aria-label="Current event" class="event" id="current-event" tabindex="-1">
-		<svelte:component this={allEvents[event.type]} />
+		<svelte:component this={events[event.type]} />
 	</article>
 </main>
 
