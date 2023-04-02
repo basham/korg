@@ -20,27 +20,19 @@
 		newGame();
 	});
 
-	function useItem (item) {
-		const changeItems = (items) => {
-			const index = items.indexOf(item);
-			return index === -1 ? items : items.splice(index, 1);
-		}
-		// pushEvent(USE_ITEM, { item, changeItems });
-	}
-
 	function defeatedFoes (log) {
 		const foes = log
 			.filter(({ type }) => type === DEFEAT_FOE)
 			.reduce((map, { foe }) => {
-				const { label } = foe;
-				if (!map.has(label)) {
-					map.set(label, 0);
+				const { name } = foe;
+				if (!map.has(name)) {
+					map.set(name, 0);
 				}
-				map.set(label, map.get(label) + 1);
+				map.set(name, map.get(name) + 1);
 				return map;
 			}, new Map());
 		return [...foes.entries()]
-			.map(([label, count]) => `${label} (${count})`);
+			.map(([name, count]) => `${name} (${count})`);
 	}
 
 	function getItems (event) {

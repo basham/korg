@@ -3,7 +3,7 @@
 	import { currentEvent } from '@src/log.js';
 </script>
 
-<p>You <strong>rolled {$currentEvent.attack}</strong> and take <strong>{$currentEvent.takeDamage} damage</strong> from the <strong>{$currentEvent.foe?.label}</strong>.</p>
+<p>You <strong>rolled {$currentEvent.attack}</strong> and take <strong>{$currentEvent.takeDamage} damage</strong> from the <strong>{$currentEvent.foe?.name}</strong>.</p>
 {#if $currentEvent.health <= 0}
 	<p>You die.</p>
 	<p><button on:click={newGame}>New game</button></p>

@@ -12,7 +12,7 @@ export const locations = [
 	const { name } = loc;
 	const id = Symbol(name);
 	const encounters = loc.encounters.map(
-		([label, attack, damage, gold]) => ({ label, attack, damage, gold })
+		([name, attack, damage, gold]) => ({ name, attack, damage, gold })
 	);
 	return { id, encounters, name };
 });
