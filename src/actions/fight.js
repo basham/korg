@@ -8,7 +8,8 @@ export function fight () {
 	const attack = roll();
 	if (attack > foe.attack) {
 		const gainGold = foe.gold;
-		pushEvent(DEFEAT_FOE, { attack, foe, gainGold });
+		const defeatedFoes = [...event.defeatedFoes, foe.id];
+		pushEvent(DEFEAT_FOE, { attack, defeatedFoes, foe, gainGold });
 	} else {
 		const takeDamage = foe.damage;
 		pushEvent(RESOLVE_FOE, { attack, foe, takeDamage });

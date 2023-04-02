@@ -11,8 +11,9 @@ export const locations = [
 ].map((location) => {
 	const { name } = location;
 	const id = Symbol(name);
-	const encounters = location.encounters.map(
-		([name, attack, damage, gold]) => ({ name, attack, damage, gold })
-	);
+	const encounters = location.encounters.map(([name, attack, damage, gold]) => {
+		const id = Symbol(name);
+		return { id, name, attack, damage, gold };
+	});
 	return { id, encounters, name };
 });

@@ -10,6 +10,7 @@ export const getCurrentEvent = () => get(currentEvent);
 export function pushEvent(type, details = {}) {
 	const event = getCurrentEvent();
 	const {
+		defeatedFoes = event.defeatedFoes || [],
 		gainGold = 0,
 		gold = event.gold,
 		heal = 0,
@@ -22,6 +23,7 @@ export function pushEvent(type, details = {}) {
 		type,
 		...details,
 		createdAt: new Date(),
+		defeatedFoes,
 		gold: gold + gainGold,
 		health: health - takeDamage + heal,
 		items,
