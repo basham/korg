@@ -23,8 +23,7 @@
 		const foes = count(defeatedFoes);
 		return [...foes.entries()].map(([id, count]) => {
 			const foe = location.encounters.find((encounter) => encounter.id === id);
-			const { name } = foe;
-			return `${name} (${count})`;
+			return counter(foe.name, count);
 		});
 	}
 
@@ -33,41 +32,82 @@
 		const inventory = count(items);
 		return [...inventory.entries()].map(([id, count]) => {
 			const item = shopItems.find((item) => item.id === id);
-			return { ...item, count };
+			return counter(item.name, count);
 		})
+	}
+
+	function counter (name, count) {
+		return `${name}${count > 1 ? ` [${count}]`: ''}`
 	}
 </script>
 
 <main>
 	<h1>Korg</h1>
-	<p class="status">{event.health} health<br>{event.gold} gold</p>
-	{#if items.length}
-		<p>Items:</p>
-		<ul>
+	<dl>
+		<dt>Health</dt>
+		<dd>{event.health}</dd>
+		<dt>Gold</dt>
+		<dd>{event.gold}</dd>
+		{#if event.location}
+			<dt>Location</dt>
+			<dd>{event.location.name}</dd>
+		{/if}
+		{#if items.length}
+			<dt>Your items</dt>
 			{#each items as item}
-				<li><strong>{`${item.name}${item.count > 1 ? ` [${item.count}]`: ''}`}:</strong> {item.description}</li>
+			<dd>{item}</dd>
 			{/each}
-		</ul>
-	{/if}
-	{#if event.location}
-		<p>Location: {event.location.name}</p>
-	{/if}
-	{#if defeatedFoes.length}
-		<p>Defeated foes: {defeatedFoes.join(', ')}</p>
-	{/if}
-	<article aria-label="Current event" class="event" id="current-event" tabindex="-1">
+		{/if}
+		{#if defeatedFoes.length}
+			<dt>Defeated foes</dt>
+			{#each defeatedFoes as foe}
+			<dd>{foe}</dd>
+			{/each}
+		{/if}
+	</dl>
+	<article aria-label="Current event" id="current-event" tabindex="-1">
 		<svelte:component this={events[event.type]} />
 	</article>
 </main>
 
 <style>
 	main {
+		display: grid;
+		grid-template-areas:
+			"header header"
+			"stats events";
+		grid-template-columns: 10rem 1fr;
+		grid-template-rows: auto;
 		margin: 0 auto;
 		max-width: 40rem;
 		padding: var(--size-8);
 	}
 
-	.event {
-		border-top: var(--px-2) solid var(--color-base-5);
+	h1 {
+		grid-area: header;
+	}
+
+	dl {
+		grid-area: stats;
+	}
+
+	dt {
+		font-weight: bold;
+	}
+
+	dt:not(:first-child) {
+		margin-top: var(--size-4);
+	}
+
+	dd {
+		font-size: var(--fs-2);
+		margin: 0;
+	}
+
+	article {
+		background-color: var(--color-base-80);
+		border-radius: var(--size-4);
+		grid-area: events;
+		padding: 0 var(--size-4);
 	}
 </style>
