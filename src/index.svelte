@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import Layout from './layout.svelte';
 	import { events as allEvents } from '@src/events.js';
 	import { newGame } from '@src/actions.js';
 	import { currentEvent } from '@src/log.js';
@@ -39,7 +38,7 @@
 	}
 </script>
 
-<Layout>
+<main>
 	<h1>Korg</h1>
 	<p class="status">{event.health} health<br>{event.gold} gold</p>
 	{#if items.length}
@@ -59,9 +58,15 @@
 	<article aria-label="Current event" class="event" id="current-event" tabindex="-1">
 		<svelte:component this={allEvents[event.type]} />
 	</article>
-</Layout>
+</main>
 
 <style>
+	main {
+		margin: 0 auto;
+		max-width: 40rem;
+		padding: var(--size-8);
+	}
+
 	.event {
 		border-top: var(--px-2) solid var(--color-base-5);
 	}
