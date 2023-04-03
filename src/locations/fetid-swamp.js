@@ -1,6 +1,6 @@
 import { ROLL } from '@src/constants.js';
 
-export const name = 'Fetid swamp';
+export const name = 'Fetid Swamp';
 
 export const encounters = [
 	['Acid trap', 0, 0, -4],

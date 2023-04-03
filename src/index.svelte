@@ -100,14 +100,15 @@
 	}
 
 	dd {
+		color: var(--color-accent);
 		font-size: var(--fs-2);
 		margin: 0;
 	}
 
 	article {
-		background-color: var(--color-base-80);
-		border-radius: var(--size-4);
+		background-color: var(--color-bg-1);
+		border-radius: var(--size-1);
 		grid-area: events;
-		padding: 0 var(--size-4);
+		padding: 0 var(--size-4) var(--size-4);
 	}
 </style>

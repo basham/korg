@@ -27,20 +27,23 @@
 	<ul>
 	{#each shopInventory.affordable as item}
 		<li>
-			<strong>{item.name}:</strong>
-			{item.description}
-			Costs {item.cost} gold.
-			<button on:click={() => addItem(item.id)}>Buy<span class="u-sr-only"> {item.name}</span></button>
+			<div><button on:click={() => addItem(item.id)}>{item.name} ({item.cost} gold)</button></div>
+			<div>{item.description}</div>
 		</li>
 	{/each}
 	</ul>
 {:else}
 	<p>Everything is too expensive.</p>
 {/if}
-<p>Browse other items:</p>
-<ul>
-{#each shopInventory.other as item}
-	<li><strong>{item.name}:</strong> {item.description} Costs {item.cost} gold.</li>
-{/each}
-</ul>
+{#if shopInventory.other.length}
+	<p>Browse other items:</p>
+	<ul>
+	{#each shopInventory.other as item}
+		<li>
+			<div><strong>{item.name} ({item.cost} gold)</strong></div>
+			<div>{item.description}</div>
+		</li>
+	{/each}
+	</ul>
+{/if}
 <p><button on:click={idle}>Exit shop</button></p>

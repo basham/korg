@@ -4,10 +4,12 @@
 </script>
 
 <p>Pick a location.</p>
+<ul>
 {#each locations as location}
-	<p>
+	<li>
 		<button on:click={() => travelTo(location.id)}>
 			{location.name}
 		</button>
-	</p>
+	</li>
 {/each}
+</ul>

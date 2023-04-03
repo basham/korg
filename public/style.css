@@ -2,34 +2,20 @@
  * https://codepen.io/basham/pen/OpNybO
  */
 :root {
-	--color-base-0: #ffffff;
-	--color-base-5: #ffecd9;
-	--color-base-10: #ffd9b4;
-	--color-base-15: #ffc68f;
-	--color-base-20: #ffb36a;
-	--color-base-25: #ffa143;
-	--color-base-30: #ff8e0c;
-	--color-base-30: darkorange; /* #ff8c00 */
-	--color-base-35: #ed8206;
-	--color-base-40: #d9780b;
-	--color-base-45: #c56d0e;
-	--color-base-50: #b26311;
-	--color-base-55: #9f5912;
-	--color-base-60: #8c4f12;
-	--color-base-65: #7a4513;
-	--color-base-70: #683c12;
-	--color-base-75: #573311;
-	--color-base-80: #462a10;
-	--color-base-85: #36210e;
-	--color-base-90: #27180a;
-	--color-base-95: #190f05;
-	--color-base-98: #0f0803;
-	--color-base-100: #000000;
-	/* coral, cornflowerblue, darkorange, darkseagreen, dodgerblue, orangered, orange, lightcoral */
-	--color-hint: var(--color-base-15);
-	--color-ix: var(--color-base-30);
-	--color-green: limegreen;
-	--color-red: orangered;
+	/* https://oklch.com/#60,0.2,25,100 */
+	--color-60-02-25: oklch(75% 0.25 25);
+
+	/*
+	red: ff0000
+	yellow: feea00
+	*/
+	--color-bg-0: oklch(0% 0.05 103);
+	--color-bg-1: oklch(20% 0.05 103);
+	--color-bg-2: oklch(25% 0.05 100);
+	--color-bg-3: oklch(92% 0.2 103);
+	--color-accent: oklch(92% 0.2 103);
+	--color-text: oklch(92% 0.05 103);
+	--color-link: oklch(63% 0.25 30);
 
 	--font: system-ui, sans-serif;
 
@@ -64,20 +50,20 @@
 }
 
 :focus {
-	outline: var(--px-2) solid var(--color-ix);
-	outline-offset: var(--px-2);
+	outline: var(--px-2) solid var(--color-link);
+	outline-offset: var(--size-1);
 }
 
 html {
-	background-color: var(--color-base-90);
-	color: var(--color-base-5);
+	background-color: var(--color-bg-0);
+	color: var(--color-text);
 	-webkit-text-size-adjust: 100%;
 }
 
 body {
 	font-family: var(--font);
-	font-size: var(--fs-1);
-	line-height: var(--lh-1);
+	font-size: var(--fs-2);
+	line-height: var(--lh-2);
 	margin: 0;
 }
 
@@ -86,6 +72,39 @@ h1 {
 	font-weight: bold;
 	line-height: var(--lh-4);
 	margin: var(--size-2) 0 0;
+}
+
+button {
+	background-color: transparent;
+	border: none;
+	border-bottom: var(--px-2) solid var(--color-link);
+	color: var(--color-accent);
+	font-family: var(--font);
+	font-size: inherit;
+	font-weight: bold;
+	padding: 0;
+}
+
+button:hover {
+	cursor: pointer;
+}
+
+p {
+	margin: var(--size-4) 0 0;
+}
+
+ul {
+	margin: var(--size-4) 0 0;
+	padding-left: var(--size-4);
+}
+
+li {
+	margin-top: var(--size-2);
+}
+
+article > :first-child {
+	font-size: var(--fs-3);
+	line-height: var(--lh-3);
 }
 
 .u-sr-only {
