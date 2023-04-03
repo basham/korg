@@ -16,6 +16,7 @@
 	--color-accent: oklch(92% 0.2 103);
 	--color-text: oklch(92% 0.05 103);
 	--color-link: oklch(63% 0.25 30);
+	--color-hint: oklch(50% 0.05 103);
 
 	--font: system-ui, sans-serif;
 
@@ -52,6 +53,10 @@
 :focus {
 	outline: var(--px-2) solid var(--color-link);
 	outline-offset: var(--size-1);
+}
+
+[tabindex]:focus {
+	outline: none;
 }
 
 html {
